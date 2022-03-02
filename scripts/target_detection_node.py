@@ -38,9 +38,10 @@ class TargetDetection(Node):
 
     
         # change steering to channel 4 and throttle to channel 7 in adafruit_twist.py
+        # change adafruit_servo_calibration.yaml for max and min
 
         # throttle:
-        # linear.x: 0.1 (netural), 0.2 (medium forward)
+        # linear.x: 0.1 (netural), 0.2 (medium forward), 0.125 (slow forward)
 
         # steering:
         # angular.z: max-left (not actual max, but to be safe) -0.3

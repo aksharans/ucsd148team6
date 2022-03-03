@@ -2,6 +2,14 @@ import cv2
 import numpy as np
 import math
 
+
+
+'''
+CV2 Image
+top left: (0, 0)
+bottom right: (640, 480)
+'''
+
 # start video capture
 video = cv2.VideoCapture(0)
 
@@ -20,6 +28,7 @@ while True:
     white = (255, 255, 255)
     black = (0, 0, 0)
 
+    # center of image captured by webcam
     height, width = frame.shape[0:2]
     image_center = (int(width/2), int(height/2))
     # print("height:", height, "width:", width)
@@ -69,6 +78,9 @@ while True:
         text2 = f"Distance: {distance}"
         cv2.line(frame, object_center, image_center, red, 3)
         cv2.putText(frame, text2, (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.75, black, 1)
+
+    else:
+        print("no contour found")
 
     # Display the frame image with bounded rectangle and masked image
     cv2.imshow('Video', frame)

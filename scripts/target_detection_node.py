@@ -1,4 +1,4 @@
-from re import A
+from email.mime import image
 import rclpy
 from rclpy.Node import Node
 from std_msgs.msg import Float32
@@ -7,6 +7,7 @@ from geometry_msgs.msg import Twist
 
 import cv2
 import numpy as np
+import math
 
 NODE_NAME = 'target_detection_node'
 
@@ -16,6 +17,14 @@ CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'
 # topics published to
 SERVO_TOPIC_NAME = '/servo'
 TWIST_TOPIC_NAME = '/cmd_vel'
+
+# color constants
+blue = (255, 0, 0)
+red = (0, 0, 255)
+green = (0, 255, 0)
+white = (255, 255, 255)
+black = (0, 0, 0)
+
 
 
 
@@ -27,15 +36,15 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        # neutral: 0.1, medium forward: 0.2, slow forward: 0.125
         self.throttle_neutral = 0.1
-        self.throttle_forward = 0.125
+        self.throttle_forward = 0.125 # slow forward
+        # self.throttle_forward = 0.2 # medium forward
 
         # steering values (Twist angular.z)
-            # max-left (not actual max, but to be safe) -0.3
-            # max-right (not actual max, but to be safe) 0.6
-            # center 0.15
+        # recalibrate these values
         self.steering_center = 0.15
+        self.steering_maxleft = -0.3
+        self.steering_maxright = 0.6
 
         # servo values
         # max left and max right for SERVO left: 180, right: 90, middle: 135
@@ -58,26 +67,53 @@ class TargetDetection(Node):
     def controller(self, data):
 
 
+        _, width = data.shape[0:2]
+        image_midX = width/2
+
         # cv2 image processing, data is the raw image from intel camera node
         hsv = cv2.cvtColor(data, cv2.COLOR_BGR2HSV)
 
         # (H, S, V)
-        # green object
-        lower = np.array([40, 50, 20])
-        higher = np.array([75, 255, 255])
+        # blue object
+        # calibrate these values with poster board
+        lower = np.array([80, 155, 20]) 
+        higher = np.array([130, 255, 255])
 
         mask = cv2.inRange(hsv, lower, higher)
 
-        contours, hierarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) != 0:
 
-            x = 1
-            # if center is within ~30px of actual middle, go straight
+            c = max(contours, key=cv2.contourArea)
+            x, _, w, _ = cv2.boundingRect(c)
+
+            target_midX = x + w/2
+
+            # target x position minus image x position
+            distance = target_midX - image_midX
+
+            # center of detected object within small threshold of actual center, go straigt
+            if math.abs(distance) < 90:   # calibrate this value with intel camera
+
+                self.twist_cmd.linear.x = self.throttle_forward
+                self.twist_cmd.angular.z = self.steering_center
+                self.servo = self.servo_center
+
+                self.twist_publisher.publish(self.twist_cmd)
+                self.servo_publisher.publish(self.servo)
+
+            # target x greater than image x, we need to turn left
+            elif distance > 0: 
+                x = 1
+
+            # target x less than image x, we need to turn right
+            elif distance < 0:
+                x = 1
 
 
+        # if no target (rectangle), then stop -- no throttle, no steering
         else: 
-            # if no image (no rectangle found), then stop -- no throttle, no steering
             self.twist_cmd.linear.x = self.throttle_neutral
             self.twist_cmd.angular.z = self.steering_center
             self.servo = self.servo_center
@@ -104,7 +140,6 @@ def main(args=None):
         target_detection.twist_cmd.linear.x = 0.1
         target_detection.twist_publisher.publish(target_detection.twist_cmd)
 
-        video.release()
         cv2.destroyAllWindows()
 
         target_detection.destroy_node()

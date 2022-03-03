@@ -1,4 +1,3 @@
-from email.mime import image
 import rclpy
 from rclpy.Node import Node
 from std_msgs.msg import Float32
@@ -17,13 +16,6 @@ CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'
 # topics published to
 SERVO_TOPIC_NAME = '/servo'
 TWIST_TOPIC_NAME = '/cmd_vel'
-
-# color constants
-blue = (255, 0, 0)
-red = (0, 0, 255)
-green = (0, 255, 0)
-white = (255, 255, 255)
-black = (0, 0, 0)
 
 
 

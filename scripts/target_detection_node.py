@@ -6,7 +6,6 @@ from geometry_msgs.msg import Twist
 
 import cv2
 import numpy as np
-import math
 
 NODE_NAME = 'target_detection_node'
 
@@ -86,7 +85,7 @@ class TargetDetection(Node):
             distance = target_midX - image_midX
 
             # center of detected object within small threshold of actual center, go straigt
-            if math.abs(distance) < 90:   # calibrate this value with intel camera
+            if abs(distance) < 90:   # calibrate this value with intel camera
 
                 self.twist_cmd.linear.x = self.throttle_forward
                 self.twist_cmd.angular.z = self.steering_center

@@ -39,9 +39,10 @@ class TargetDetection(Node):
 
         # servo values
         # max left and max right for SERVO left: 180, right: 90, middle: 135
-        # change adafruit_servo_calibration.yaml for max and min servo values (max: a, min: b)
+        # change adafruit_servo_calibration.yaml for max and min servo values 
+        # (bus:  1, port 8, max: a, min: b)
         self.servo_center = 135
-
+        self.last_servo_pos = 135
 
         ### Publishers/Subscribers ###
            
@@ -83,24 +84,42 @@ class TargetDetection(Node):
             # target x position minus image x position
             distance = target_midX - image_midX
 
+            # evaluate servo adjustment with P controller
+            turn_factor = (abs(distance)/image_midX)**2         # turn_amount decreases as target center
+            angle_per_frame = 5                                 # is closer to image center
+            turn_amount = angle_per_frame*turn_factor
+
+            # Set throttle to forward
+            self.twist_cmd.linear.x = self.throttle_forward
+
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < 90:   # calibrate this value with intel camera
-
-                self.twist_cmd.linear.x = self.throttle_forward
-                self.twist_cmd.angular.z = self.steering_center
                 self.servo = self.servo_center
+                self.twist_cmd.angular.z = self.steering_center
 
-                self.twist_publisher.publish(self.twist_cmd)
-                self.servo_publisher.publish(self.servo)
 
-            # target x greater than image x, we need to turn left
+            # target x greater than image x, we need to turn right
             elif distance > 0: 
-                x = 1
 
-            # target x less than image x, we need to turn right
+                # servo
+                self.servo = self.last_servo_pos - turn_amount
+                self.last_servo_pos = self.servo
+
+                # steering
+
+            # target x less than image x, we need to turn left
             elif distance < 0:
-                x = 1
 
+                # servo
+                self.servo = self.last_servo_pos + turn_amount
+                self.last_servo_pos = self.servo
+
+                # steering
+
+
+            # publish to the twist and servo topics with calculated values
+            self.twist_publisher.publish(self.twist_cmd)
+            self.servo_publisher.publish(self.servo)
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 

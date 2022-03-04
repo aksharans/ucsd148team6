@@ -57,7 +57,6 @@ class TargetDetection(Node):
     
     def controller(self, data):
 
-
         _, width = data.shape[0:2]
         image_midX = width/2
 

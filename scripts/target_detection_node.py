@@ -5,6 +5,7 @@ from std_msgs.msg import Image
 from geometry_msgs.msg import Twist
 
 import cv2
+from cv_bridge import CvBridge
 import numpy as np
 
 NODE_NAME = 'target_detection_node'
@@ -51,6 +52,8 @@ class TargetDetection(Node):
         # threshdold distance from the iamge center for where we don't want the
         # robot to adjust its steering/servo, rather, it should just go straight
         self.camera_threshold = 90.0
+        # bridge for camera
+        self.bridge = CvBridge()
 
         ### Publishers/Subscribers ###
            
@@ -77,12 +80,15 @@ class TargetDetection(Node):
             elif servo > self.servo_maxLeft:
                 return self.servo_maxLeft
 
+        # get image from data
+        frame = self.bridge.imgmsg_to_csv(data)
+
         # get data (intel image) width
-        _, width = data.shape[0:2]
+        _, width = frame.shape[0:2]
         image_midX = width/2
 
         # cv2 image processing, data is the raw image from intel camera node
-        hsv = cv2.cvtColor(data, cv2.COLOR_BGR2HSV)
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # (H, S, V)
         # blue object

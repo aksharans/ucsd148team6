@@ -41,6 +41,8 @@ class TargetDetection(Node):
         # max left and max right for SERVO left: 180, right: 90, middle: 135
         # change adafruit_servo_calibration.yaml for max and min servo values 
         # (bus:  1, port 8, max: a, min: b)
+        self.servo_maxLeft = 180
+        self.servo_maxRight = 90
         self.servo_center = 135
         self.last_servo_pos = 135
 
@@ -57,6 +59,18 @@ class TargetDetection(Node):
 
     
     def controller(self, data):
+
+
+        def servo_to_steering(servo):
+
+            return servo/100 - 1.2
+
+
+        def check_servo(servo):
+            if servo < self.servo_maxRight:
+                return self.servo_maxRight
+            elif servo > self.servo_maxLeft:
+                return self.servo_maxLeft
 
         _, width = data.shape[0:2]
         image_midX = width/2
@@ -94,7 +108,11 @@ class TargetDetection(Node):
 
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < 90:   # calibrate this value with intel camera
+                # servo
                 self.servo = self.servo_center
+                self.last_servo_pos = self.servo
+
+                # steering
                 self.twist_cmd.angular.z = self.steering_center
 
 
@@ -102,20 +120,20 @@ class TargetDetection(Node):
             elif distance > 0: 
 
                 # servo
-                self.servo = self.last_servo_pos - turn_amount
+                self.servo = check_servo(self.last_servo_pos - turn_amount)
                 self.last_servo_pos = self.servo
 
                 # steering
-
+                self.twist_cmd.angular.z = servo_to_steering(self.servo)
             # target x less than image x, we need to turn left
             elif distance < 0:
 
                 # servo
-                self.servo = self.last_servo_pos + turn_amount
+                self.servo = check_servo(self.last_servo_pos + turn_amount)
                 self.last_servo_pos = self.servo
 
                 # steering
-
+                self.twist_cmd.angular.z = servo_to_steering(self.servo)
 
             # publish to the twist and servo topics with calculated values
             self.twist_publisher.publish(self.twist_cmd)

@@ -41,10 +41,16 @@ class TargetDetection(Node):
         # max left and max right for SERVO left: 180, right: 90, middle: 135
         # change adafruit_servo_calibration.yaml for max and min servo values 
         # (bus:  1, port 8, max: a, min: b)
-        self.servo_maxLeft = 180
-        self.servo_maxRight = 90
-        self.servo_center = 135
-        self.last_servo_pos = 135
+        self.servo_maxLeft = 180.0
+        self.servo_maxRight = 90.0
+        self.servo_center = 135.0
+        self.last_servo_pos = 135.0
+
+
+        ### Camera threshold ###
+        # threshdold distance from the iamge center for where we don't want the
+        # robot to adjust its steering/servo, rather, it should just go straight
+        self.camera_threshold = 90.0
 
         ### Publishers/Subscribers ###
            
@@ -111,7 +117,7 @@ class TargetDetection(Node):
             self.twist_cmd.linear.x = self.throttle_neutral # neutral for now
 
             # center of detected object within small threshold of actual center, go straigt
-            if abs(distance) < 90:   # calibrate this value with intel camera
+            if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
                 # servo
                 self.servo = self.servo_center
                 self.last_servo_pos = self.servo

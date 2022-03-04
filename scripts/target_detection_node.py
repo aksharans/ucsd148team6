@@ -60,18 +60,18 @@ class TargetDetection(Node):
     
     def controller(self, data):
 
-
+        # map servo value to steering value
         def servo_to_steering(servo):
-
             return servo/100 - 1.2
 
-
+        # check whether servo is out of the max bounds, so the steering doesn't exceed it's max
         def check_servo(servo):
             if servo < self.servo_maxRight:
                 return self.servo_maxRight
             elif servo > self.servo_maxLeft:
                 return self.servo_maxLeft
 
+        # get data (intel image) width
         _, width = data.shape[0:2]
         image_midX = width/2
 
@@ -84,15 +84,19 @@ class TargetDetection(Node):
         lower = np.array([80, 155, 20]) 
         higher = np.array([130, 255, 255])
 
+        # mask and find contours
         mask = cv2.inRange(hsv, lower, higher)
-
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) != 0:
 
+            # get max contour
             c = max(contours, key=cv2.contourArea)
+
+            # draw a rectangle around c and get x position & width
             x, _, w, _ = cv2.boundingRect(c)
 
+            # x coordinate of middle of the detected target
             target_midX = x + w/2
 
             # target x position minus image x position
@@ -104,7 +108,7 @@ class TargetDetection(Node):
             turn_amount = angle_per_frame*turn_factor
 
             # Set throttle to forward
-            self.twist_cmd.linear.x = self.throttle_forward
+            self.twist_cmd.linear.x = self.throttle_neutral # neutral for now
 
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < 90:   # calibrate this value with intel camera
@@ -125,6 +129,7 @@ class TargetDetection(Node):
 
                 # steering
                 self.twist_cmd.angular.z = servo_to_steering(self.servo)
+
             # target x less than image x, we need to turn left
             elif distance < 0:
 

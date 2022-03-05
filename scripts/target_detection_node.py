@@ -106,11 +106,12 @@ class TargetDetection(Node):
             c = max(contours, key=cv2.contourArea)
 
             # draw a rectangle around c and get x position & width
-            x, _, w, _ = cv2.boundingRect(c)
+            x, y, w, h = cv2.boundingRect(c)
 
             # x coordinate of middle of the detected target
             target_midX = x + w/2
-
+            target_midY = y + h/2
+            
             # target x position minus image x position
             distance = target_midX - image_midX
 

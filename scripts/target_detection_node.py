@@ -81,7 +81,7 @@ class TargetDetection(Node):
                 return self.servo_maxLeft
 
         # get image from data
-        frame = self.bridge.imgmsg_to_csv(data)
+        frame = self.bridge.imgmsg_to_cv2(data)
 
         # get data (intel image) width
         _, width = frame.shape[0:2]

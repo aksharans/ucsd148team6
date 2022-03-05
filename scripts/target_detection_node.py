@@ -25,6 +25,11 @@ class TargetDetection(Node):
     def __init__(self):
         super().__init__(NODE_NAME)
 
+        ### Target Info ###
+
+        self.target_midX = 0
+        self.target_midY = 0
+
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
@@ -49,9 +54,10 @@ class TargetDetection(Node):
 
 
         ### Camera threshold ###
-        # threshdold distance from the iamge center for where we don't want the
+        # threshold distance from the image center for where we don't want the
         # robot to adjust its steering/servo, rather, it should just go straight
         self.camera_threshold = 90.0
+
         # bridge for camera
         self.bridge = CvBridge()
 
@@ -109,9 +115,9 @@ class TargetDetection(Node):
             x, y, w, h = cv2.boundingRect(c)
 
             # x coordinate of middle of the detected target
-            target_midX = x + w/2
-            target_midY = y + h/2
-            
+            self.target_midX = x + w/2
+            self.target_midY = y + h/2
+
             # target x position minus image x position
             distance = target_midX - image_midX
 

@@ -7,6 +7,7 @@ from geometry_msgs.msg import Twist
 import cv2
 from cv_bridge import CvBridge
 import numpy as np
+import time
 
 NODE_NAME = 'target_detection_node'
 
@@ -46,7 +47,7 @@ class TargetDetection(Node):
         # servo values
         # max left and max right for SERVO left: 180, right: 90, middle: 135
         # change adafruit_servo_calibration.yaml for max and min servo values 
-        # (bus:  1, port 8, max: a, min: b)
+        # (bus:  1, port 8, max: 180, min: 90)
         self.servo_maxLeft = 180.0
         self.servo_maxRight = 90.0
         self.servo_center = 135.0
@@ -114,12 +115,12 @@ class TargetDetection(Node):
             # draw a rectangle around c and get x position & width
             x, y, w, h = cv2.boundingRect(c)
 
-            # x coordinate of middle of the detected target
+            # x and y coordinate of middle of the detected target
             self.target_midX = x + w/2
             self.target_midY = y + h/2
 
-            # target x position minus image x position
-            distance = target_midX - image_midX
+            # get distance of target x position minus image x position
+            distance = self.target_midX - image_midX
 
             # evaluate servo adjustment with P controller
             turn_factor = (abs(distance)/image_midX)**2         # turn_amount decreases as target center
@@ -191,10 +192,11 @@ def main(args=None):
         target_detection.twist_cmd.linear.x = 0.1
         target_detection.twist_publisher.publish(target_detection.twist_cmd)
 
+        time.sleep(1)
         cv2.destroyAllWindows()
-
         target_detection.destroy_node()
         rclpy.shutdown()
+        
         print(f"Successfully shut down {NODE_NAME}")
 
 if __name__ == 'main':

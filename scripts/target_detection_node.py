@@ -130,7 +130,7 @@ class TargetDetection(Node):
 
             # Set throttle to forward
             self.twist_cmd.linear.x = self.throttle_neutral # neutral for now
-            '''
+
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
                 # servo
@@ -160,7 +160,7 @@ class TargetDetection(Node):
 
                 # steering
                 self.twist_cmd.angular.z = servo_to_steering(self.servo)
-            '''
+
             # publish to the twist and servo topics with calculated values
             self.twist_publisher.publish(self.twist_cmd)
             '''self.servo_publisher.publish(self.servo)'''

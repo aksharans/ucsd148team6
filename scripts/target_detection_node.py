@@ -19,6 +19,9 @@ SERVO_TOPIC_NAME = '/servo'
 TWIST_TOPIC_NAME = '/cmd_vel'
 
 
+# change included sensors in car_config.yaml
+# change adafruit_servo_calibration.yaml for max and min servo values 
+# change steering to channel 4 and throttle to channel 7 in adafruit_twist.py
 
 
 class TargetDetection(Node):
@@ -46,7 +49,6 @@ class TargetDetection(Node):
 
         # servo values
         # max left and max right for SERVO left: 180, right: 90, middle: 135
-        # change adafruit_servo_calibration.yaml for max and min servo values 
         # (bus:  1, port 8, max: 180, min: 90)
         self.servo_maxLeft = 180.0
         self.servo_maxRight = 90.0
@@ -64,7 +66,6 @@ class TargetDetection(Node):
 
         ### Publishers/Subscribers ###
            
-        # change steering to channel 4 and throttle to channel 7 in adafruit_twist.py
         self.twist_publisher = self.create_publisher(Twist, TWIST_TOPIC_NAME, 10)
         self.twist_cmd = Twist()
 

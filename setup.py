@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = 'ucsd148team6_aimbot_pkg'
+package_name = 'aimbot_pkg'
 
 setup(
     name=package_name,
@@ -23,7 +23,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'target_detection_node = ucsd148team6_aimbot_pkg.target_detection_node:main'
+            'target_detection_node = aimbot_pkg.target_detection_node:main'
         ],
     },
 )

@@ -6,7 +6,7 @@ package_name = 'aimbot_pkg'
 
 setup(
     name=package_name,
-    version='0.0.1',
+    version='0.0.0',
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -16,14 +16,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='somebody very awesome',
-    maintainer_email='user@user.com',
+    maintainer='root',
+    maintainer_email='djnighti@ucsd.edu',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'target_detection_node = aimbot_pkg.target_detection_node:main'
+		'target_detection_node = aimbot_pkg.target_detection_node:main'
         ],
     },
 )

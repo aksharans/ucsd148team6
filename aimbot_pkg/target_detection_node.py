@@ -13,6 +13,7 @@ NODE_NAME = 'target_detection_node'
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'
+DEPTH_TOPIC_NAME = '/camera/depth/image_rect_raw'
 
 # topics published to
 SERVO_TOPIC_NAME = '/servo'
@@ -37,9 +38,11 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = 0.1
-        self.throttle_forward = 0.125 # slow forward
-        # self.throttle_forward = 0.2 # medium forward
+        self.throttle = Float32()
+        self.throttle_dic = {'previous_throttle': 0.0}
+        self.error_dic = {'previous_error': 0.0, 'normalized_error': 0.0}
+        self.time_dic = {'previous_time': 0.0, 'current_time': 0.0}
+        self.following_dist = .5
 
         # steering values (Twist angular.z)
         # recalibrate these values
@@ -72,10 +75,11 @@ class TargetDetection(Node):
         self.servo_publisher = self.create_publisher(Float32, SERVO_TOPIC_NAME, 10)
         self.servo = self.servo_center
 
-        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.controller, 10)
+        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
+        self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
 
-    
-    def controller(self, data):
+    # controls servo and steering. also publishes both servo and Twist attributes
+    def servo_steering_controller(self, data):
 
         # map servo value to steering value
         def servo_to_steering(servo):
@@ -128,8 +132,6 @@ class TargetDetection(Node):
             angle_per_frame = 5                                 # is closer to image center
             turn_amount = angle_per_frame*turn_factor
 
-            # Set throttle to forward
-            self.twist_cmd.linear.x = self.throttle_neutral # neutral for now
 
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
@@ -163,7 +165,7 @@ class TargetDetection(Node):
 
             # publish to the twist and servo topics with calculated values
             self.twist_publisher.publish(self.twist_cmd)
-            '''self.servo_publisher.publish(self.servo)'''
+            self.servo_publisher.publish(self.servo)
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
@@ -175,7 +177,13 @@ class TargetDetection(Node):
             self.servo_publisher.publish(self.servo)
 
 
-
+    # controls throttle and updates linear x atrribute. Doesn't publish.
+    def throttle_controller(self, data):
+        image = self.bridge.imgmsg_to_cv2(data)
+        pixel = (self.target_midX, self.target_midY)
+        depth = image[pixel[0], pixel[1]]
+        error = depth - self.following_dist
+        
 
 def main(args=None):
 

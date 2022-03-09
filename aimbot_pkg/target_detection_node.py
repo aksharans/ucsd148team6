@@ -37,8 +37,8 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = 0.1
-        self.throttle_forward = 0.125 # slow forward
+        self.throttle_neutral = 0.15
+        self.throttle_forward = 0.225 # slow forward
         # self.throttle_forward = 0.2 # medium forward
 
         # steering values (Twist angular.z)
@@ -88,8 +88,9 @@ class TargetDetection(Node):
             elif servo > self.servo_maxLeft:
                 return self.servo_maxLeft
 
-        # get image from data
+        # get image from data and convert to RGB
         frame = self.bridge.imgmsg_to_cv2(data)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
         # get data (intel image) width
         _, width = frame.shape[0:2]
@@ -108,10 +109,14 @@ class TargetDetection(Node):
         mask = cv2.inRange(hsv, lower, higher)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        # get max contour if there is one and get it's area
+        area = 0
         if len(contours) != 0:
-
-            # get max contour
             c = max(contours, key=cv2.contourArea)
+            area = cv2.contourArea(c)
+
+        # if area greater than a certain threshold
+        if area > 2000:
 
             # draw a rectangle around c and get x position & width
             x, y, w, h = cv2.boundingRect(c)
@@ -129,8 +134,8 @@ class TargetDetection(Node):
             turn_amount = angle_per_frame*turn_factor
 
             # Set throttle to forward
-            self.twist_cmd.linear.x = self.throttle_neutral # neutral for now
-
+            self.twist_cmd.linear.x = self.throttle_forward # neutral for now
+            '''
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
                 # servo
@@ -160,13 +165,15 @@ class TargetDetection(Node):
 
                 # steering
                 self.twist_cmd.angular.z = servo_to_steering(self.servo)
-
+            '''
+            print("Publishing slow throttle")
             # publish to the twist and servo topics with calculated values
             self.twist_publisher.publish(self.twist_cmd)
             '''self.servo_publisher.publish(self.servo)'''
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
+            print("No contour found")
             self.twist_cmd.linear.x = self.throttle_neutral
             self.twist_cmd.angular.z = self.steering_center
             self.servo.data = float(self.servo_center)
@@ -174,7 +181,10 @@ class TargetDetection(Node):
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 
-
+        cv2.imshow('frame', frame)
+        cv2.imshow('hsv', hsv)
+        cv2.imshow('mask', mask)
+        cv2.waitKey(1)
 
 
 def main(args=None):

@@ -40,6 +40,7 @@ class TargetDetection(Node):
         self.throttle_neutral = 0.15
         self.throttle_forward = 0.225 # slow forward
         # self.throttle_forward = 0.2 # medium forward
+        self.last_throttle = self.throttle_neutral
 
         # steering values (Twist angular.z)
         # recalibrate these values
@@ -88,6 +89,14 @@ class TargetDetection(Node):
             elif servo > self.servo_maxLeft:
                 return self.servo_maxLeft
 
+        def throttle_pid(current_throttle, newspeed):
+            K = 50
+            t = current_throttle*(K-1)/K + newspeed/K
+            print(f" Caclulated throttle: {t}")
+            return t
+            
+
+
         # get image from data and convert to RGB
         frame = self.bridge.imgmsg_to_cv2(data)
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -114,6 +123,7 @@ class TargetDetection(Node):
         if len(contours) != 0:
             c = max(contours, key=cv2.contourArea)
             area = cv2.contourArea(c)
+        # print(f"Area: {area}")
 
         # if area greater than a certain threshold
         if area > 2000:
@@ -134,7 +144,9 @@ class TargetDetection(Node):
             turn_amount = angle_per_frame*turn_factor
 
             # Set throttle to forward
-            self.twist_cmd.linear.x = self.throttle_forward # neutral for now
+            throttle = throttle_pid(self.last_throttle, self.throttle_forward)
+            self.twist_cmd.linear.x = throttle
+            self.last_throttle = throttle
             '''
             # center of detected object within small threshold of actual center, go straigt
             if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
@@ -174,7 +186,11 @@ class TargetDetection(Node):
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
             print("No contour found")
-            self.twist_cmd.linear.x = self.throttle_neutral
+
+            throttle = throttle_pid(self.last_throttle, self.throttle_neutral)
+            self.twist_cmd.linear.x = throttle
+            self.last_throttle = throttle
+
             self.twist_cmd.angular.z = self.steering_center
             self.servo.data = float(self.servo_center)
 

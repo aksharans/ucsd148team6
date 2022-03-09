@@ -12,40 +12,54 @@ def generate_launch_description():
 
     aimbot_pkg = 'aimbot_pkg'
     td_node_name = 'target_detection_node'
-    target_detection_launch = 'target_detection.launch.py'
 
-    nav_package = 'ucsd_robocar_nav2_pkg'
-    all_components_launch = 'all_components.launch.py'
+    actuator_package = 'ucsd_robocar_actuator2_pkg'
+    adafruit_servo_launch = 'adafruit_servo.launch.py'
+    adafruit_twist_launch = 'adafruit_twist.launch.py'
+
+    sensor_pkg = 'ucsd_robocar_sensor2_pkg'
+    intel_launch = 'camera_intel.launch.py'
 
     ld = LaunchDescription()
 
-    components_launch = IncludeLaunchDescription(
+    adafruit_servo_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(
-                    get_package_share_directory(nav_package),
+                    get_package_share_directory(actuator_package),
                     'launch',
-                    all_components_launch)
+                    adafruit_servo_launch)
             )
         )
 
-    # target_detection_node = Node(
-    #     package=aimbot_pkg,
-    #     executable=td_node_name,
-    #     output='screen',
-    # )
-
-    target_detection_launch = IncludeLaunchDescription(
+    adafruit_twist_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(
-                    get_package_share_directory(aimbot_pkg),
+                    get_package_share_directory(actuator_package),
                     'launch',
-                    target_detection_launch)
+                    adafruit_twist_launch)
             )
         )
 
+    intel_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory(sensor_pkg),
+                'launch',
+                intel_launch)
+        )
+    )
 
-    ld.add_action(components_launch)
-    ld.add_action(target_detection_launch)
+    target_detection_node = Node(
+        package=aimbot_pkg,
+        executable=td_node_name,
+        output='screen',
+    )
+
+
+    ld.add_action(adafruit_servo_launch)
+    ld.add_action(adafruit_twist_launch)
+    ld.add_action(intel_launch)
+    ld.add_action(target_detection_node)
 
     return ld
 

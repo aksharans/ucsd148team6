@@ -1,7 +1,7 @@
 import rclpy
-from rclpy.Node import Node
+from rclpy.node import Node
 from std_msgs.msg import Float32
-from std_msgs.msg import Image
+from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 
 import cv2
@@ -70,7 +70,7 @@ class TargetDetection(Node):
         self.twist_cmd = Twist()
 
         self.servo_publisher = self.create_publisher(Float32, SERVO_TOPIC_NAME, 10)
-        self.servo = self.servo_center
+        self.servo = Float32()
 
         self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.controller, 10)
 
@@ -169,7 +169,7 @@ class TargetDetection(Node):
         else: 
             self.twist_cmd.linear.x = self.throttle_neutral
             self.twist_cmd.angular.z = self.steering_center
-            self.servo = self.servo_center
+            self.servo.data = float(self.servo_center)
 
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)

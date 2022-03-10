@@ -90,7 +90,7 @@ class TargetDetection(Node):
                 return self.servo_maxLeft
 
         def throttle_pid(current_throttle, newspeed):
-            K = 50
+            K = 40
             t = current_throttle*(K-1)/K + newspeed/K
             print(f" Caclulated throttle: {t}")
             return t
@@ -197,9 +197,9 @@ class TargetDetection(Node):
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 
-        cv2.imshow('frame', frame)
-        cv2.imshow('hsv', hsv)
-        cv2.imshow('mask', mask)
+        # cv2.imshow('frame', frame)
+        # cv2.imshow('hsv', hsv)
+        # cv2.imshow('mask', mask)
         cv2.waitKey(1)
 
 

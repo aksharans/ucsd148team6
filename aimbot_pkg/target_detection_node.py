@@ -167,8 +167,6 @@ class TargetDetection(Node):
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
             self.twist_cmd.linear.x = self.throttle_neutral
-            self.twist_cmd.angular.z = self.steering_center
-            self.servo = self.servo_center
 
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)

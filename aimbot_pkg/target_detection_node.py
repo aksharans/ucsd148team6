@@ -38,10 +38,7 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle = Float32()
-        self.throttle_dic = {'previous_throttle': 0.0}
-        self.error_dic = {'previous_error': 0.0, 'normalized_error': 0.0}
-        self.time_dic = {'previous_time': 0.0, 'current_time': 0.0}
+        self.throttle_neutral = .255
         self.following_dist = .5
 
         # steering values (Twist angular.z)
@@ -83,7 +80,7 @@ class TargetDetection(Node):
 
         # map servo value to steering value
         def servo_to_steering(servo):
-            return servo/100 - 1.2
+            return (270-servo)/100 - 1.2
 
         # check whether servo is out of the max bounds, so the steering doesn't exceed it's max
         def check_servo(servo):
@@ -183,6 +180,9 @@ class TargetDetection(Node):
         pixel = (self.target_midX, self.target_midY)
         depth = image[pixel[0], pixel[1]]
         error = depth - self.following_dist
+        Kp = 40
+        self.twist_cmd.linear.x = Kp * error
+
         
 
 def main(args=None):

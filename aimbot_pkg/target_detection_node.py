@@ -10,7 +10,7 @@ import numpy as np
 import time
 
 sadfoj
-NODE_NAME = 'target_detection_node'jsaasdfjla;sdkfj
+NODE_NAME = 'target_detection_node'jsaasdfjla
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'

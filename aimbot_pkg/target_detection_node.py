@@ -31,7 +31,7 @@ class TargetDetection(Node):
         super().__init__(NODE_NAME)
 
         ### Target Info ###
-
+        self.target_found = False
         self.target_midX = 0
         self.target_midY = 0
 
@@ -110,7 +110,7 @@ class TargetDetection(Node):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) != 0:
-
+            self.target_found = True
             # get max contour
             c = max(contours, key=cv2.contourArea)
 
@@ -130,18 +130,8 @@ class TargetDetection(Node):
             turn_amount = angle_per_frame*turn_factor
 
 
-            # center of detected object within small threshold of actual center, go straigt
-            if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
-                # servo
-                self.servo = self.servo_center
-                self.last_servo_pos = self.servo
-
-                # steering
-                self.twist_cmd.angular.z = self.steering_center
-
-
             # target x greater than image x, we need to turn right
-            elif distance > 0: 
+            if distance > 0: 
 
                 # servo
                 self.servo = check_servo(self.last_servo_pos - turn_amount)
@@ -166,6 +156,7 @@ class TargetDetection(Node):
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
+            self.target_found = False
             self.twist_cmd.linear.x = self.throttle_neutral
 
             self.twist_publisher.publish(self.twist_cmd)
@@ -174,12 +165,13 @@ class TargetDetection(Node):
 
     # controls throttle and updates linear x atrribute. Doesn't publish.
     def throttle_controller(self, data):
-        image = self.bridge.imgmsg_to_cv2(data)
-        pixel = (self.target_midX, self.target_midY)
-        depth = image[pixel[0], pixel[1]]
-        error = depth - self.following_dist
-        Kp = 40
-        self.twist_cmd.linear.x = self.throttle_neutral + Kp * error
+        if self.target_found:
+            image = self.bridge.imgmsg_to_cv2(data)
+            pixel = (self.target_midX, self.target_midY)
+            depth = image[pixel[0], pixel[1]]
+            error = depth - self.following_dist
+            Kp = 40
+            self.twist_cmd.linear.x = self.throttle_neutral + Kp * error
 
 
 def main(args=None):

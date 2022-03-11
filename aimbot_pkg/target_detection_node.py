@@ -181,9 +181,8 @@ class TargetDetection(Node):
         depth = image[pixel[0], pixel[1]]
         error = depth - self.following_dist
         Kp = 40
-        self.twist_cmd.linear.x = Kp * error
+        self.twist_cmd.linear.x = self.throttle_neutral + Kp * error
 
-        
 
 def main(args=None):
 

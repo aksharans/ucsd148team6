@@ -9,7 +9,8 @@ from cv_bridge import CvBridge
 import numpy as np
 import time
 
-NODE_NAME = 'target_detection_node'jsadfl;jasdlf
+sadfoj
+NODE_NAME = 'target_detection_node'jsaasdfjla;sdkfj
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'

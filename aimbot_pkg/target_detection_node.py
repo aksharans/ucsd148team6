@@ -9,10 +9,7 @@ from cv_bridge import CvBridge
 import numpy as np
 import time
 
-sadfoj
-NODE_NAME = 'target_detection_node'jsaasdfjla;sdkfj
-def add(x):
-    hello
+NODE_NAME = 'target_detection_node'
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'

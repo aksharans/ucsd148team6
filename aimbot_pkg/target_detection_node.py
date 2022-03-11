@@ -21,7 +21,7 @@ TWIST_TOPIC_NAME = '/cmd_vel'
 
 
 # change included sensors in car_config.yaml
-# change adafruit_servo_calibration.yaml for max and min servo values 
+# change adafruit_servo_calibration.yaml for max and min servo values
 # change steering to channel 4 and throttle to channel 7 in adafruit_twist.py
 
 
@@ -55,7 +55,6 @@ class TargetDetection(Node):
         self.servo_center = 135.0
         self.last_servo_pos = 135.0
 
-
         ### Camera threshold ###
         # threshold distance from the image center for where we don't want the
         # robot to adjust its steering/servo, rather, it should just go straight
@@ -65,15 +64,19 @@ class TargetDetection(Node):
         self.bridge = CvBridge()
 
         ### Publishers/Subscribers ###
-           
-        self.twist_publisher = self.create_publisher(Twist, TWIST_TOPIC_NAME, 10)
+
+        self.twist_publisher = self.create_publisher(
+            Twist, TWIST_TOPIC_NAME, 10)
         self.twist_cmd = Twist()
 
-        self.servo_publisher = self.create_publisher(Float32, SERVO_TOPIC_NAME, 10)
+        self.servo_publisher = self.create_publisher(
+            Float32, SERVO_TOPIC_NAME, 10)
         self.servo = self.servo_center
 
-        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
-        self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
+        self.camera_subscriber = self.create_subscription(
+            Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
+        self.depth_subscriber = self.create_subscription(
+            Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
 
     # controls servo and steering. also publishes both servo and Twist attributes
     def servo_steering_controller(self, data):
@@ -102,12 +105,13 @@ class TargetDetection(Node):
         # (H, S, V)
         # blue object
         # calibrate these values with poster board
-        lower = np.array([80, 155, 20]) 
+        lower = np.array([80, 155, 20])
         higher = np.array([130, 255, 255])
 
         # mask and find contours
         mask = cv2.inRange(hsv, lower, higher)
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(
+            mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) != 0:
             self.target_found = True
@@ -125,13 +129,13 @@ class TargetDetection(Node):
             distance = self.target_midX - image_midX
 
             # evaluate servo adjustment with P controller
-            turn_factor = (abs(distance)/image_midX)**2         # turn_amount decreases as target center
+            # turn_amount decreases as target center
+            turn_factor = (abs(distance)/image_midX)**2
             angle_per_frame = 5                                 # is closer to image center
             turn_amount = angle_per_frame*turn_factor
 
-
             # target x greater than image x, we need to turn right
-            if distance > 0: 
+            if distance > 0:
 
                 # servo
                 self.servo = check_servo(self.last_servo_pos - turn_amount)
@@ -155,15 +159,15 @@ class TargetDetection(Node):
             self.servo_publisher.publish(self.servo)
 
         # if no target (rectangle), then stop -- no throttle, no steering
-        else: 
+        else:
             self.target_found = False
             self.twist_cmd.linear.x = self.throttle_neutral
 
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 
-
     # controls throttle and updates linear x atrribute. Doesn't publish.
+
     def throttle_controller(self, data):
         if self.target_found:
             image = self.bridge.imgmsg_to_cv2(data)
@@ -179,7 +183,7 @@ def main(args=None):
     rclpy.init(args=args)
     target_detection = TargetDetection()
 
-    try: 
+    try:
         rclpy.spin(target_detection)
         target_detection.destroy_node()
         rclpy.shutdown()
@@ -194,8 +198,9 @@ def main(args=None):
         cv2.destroyAllWindows()
         target_detection.destroy_node()
         rclpy.shutdown()
-        
+
         print(f"Successfully shut down {NODE_NAME}")
+
 
 if __name__ == 'main':
     main()

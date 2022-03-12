@@ -116,8 +116,7 @@ class TargetDetection(Node):
         # calibrate these values with poster board
         lower = np.array([80, 155, 20])
         higher = np.array([130, 255, 255])
-        day_lower = np.array([150, 155, 20])
-        day_higher = np.array([200, 255, 255])
+
         # mask and find contours
         mask = cv2.inRange(hsv, lower, higher)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -155,15 +154,6 @@ class TargetDetection(Node):
             self.twist_cmd.linear.x = throttle
             self.last_throttle = throttle
             
-            # center of detected object within small threshold of actual center, go straigt
-            '''if abs(distance) < self.camera_threshold:   # calibrate this value with intel camera
-                # servo
-                self.servo.data = float(self.servo_center)
-                self.last_servo_pos = self.servo.data
-
-                # steering
-                self.twist_cmd.angular.z = self.steering_center
-	    '''
 
             # target x greater than image x, we need to turn right
             if distance > 0: 

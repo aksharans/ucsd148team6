@@ -9,8 +9,7 @@ from cv_bridge import CvBridge
 import numpy as np
 import time
 
-sadfoj
-NODE_NAME = 'target_detection_node'jsaasdfjla
+NODE_NAME = 'target_detection_node'
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'
@@ -39,7 +38,8 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = .255
+        self.throttle_neutral = .15
+        self.last_throttle = self.throttle_neutral
         self.following_dist = .5
 
         # steering values (Twist angular.z)
@@ -92,9 +92,21 @@ class TargetDetection(Node):
                 return self.servo_maxRight
             elif servo > self.servo_maxLeft:
                 return self.servo_maxLeft
+            else:
+                return float(servo)
+
+        
+        def pid(attribute, current, new):
+            constants = {'throttle': 5, 'steering': 5, 'servo': 5}
+            K = constants[attribute]
+            t = current*(K-1)/K + new/K
+            print(f" Caclulated {attribute}: {t}")
+            return t
+
 
         # get image from data
         frame = self.bridge.imgmsg_to_cv2(data)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
         # get data (intel image) width
         _, width = frame.shape[0:2]
@@ -115,10 +127,15 @@ class TargetDetection(Node):
             mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         if len(contours) != 0:
-            self.target_found = True
             # get max contour
             c = max(contours, key=cv2.contourArea)
+            area = cv2.contourArea(c)
+        print(f"Area: {area}")
 
+        # if area greater than a certain threshold
+        if area > 2000:
+            print("Contour found")
+            self.target_found = True
             # draw a rectangle around c and get x position & width
             x, y, w, h = cv2.boundingRect(c)
 
@@ -132,38 +149,52 @@ class TargetDetection(Node):
             # evaluate servo adjustment with P controller
             # turn_amount decreases as target center
             turn_factor = (abs(distance)/image_midX)**2
-            angle_per_frame = 5                                 # is closer to image center
+            angle_per_frame = 10                                 # is closer to image center
             turn_amount = angle_per_frame*turn_factor
 
             # target x greater than image x, we need to turn right
             if distance > 0:
 
                 # servo
-                self.servo = check_servo(self.last_servo_pos - turn_amount)
-                self.last_servo_pos = self.servo
+                self.servo.data = check_servo(self.last_servo_pos - turn_amount)
+                self.last_servo_pos = self.servo.data
 
                 # steering
-                self.twist_cmd.angular.z = servo_to_steering(self.servo)
+                self.twist_cmd.angular.z = servo_to_steering(self.servo.data)
 
             # target x less than image x, we need to turn left
             elif distance < 0:
 
                 # servo
-                self.servo = check_servo(self.last_servo_pos + turn_amount)
-                self.last_servo_pos = self.servo
+                self.servo.data = check_servo(self.last_servo_pos + turn_amount)
+                self.last_servo_pos = self.servo.data
 
                 # steering
-                self.twist_cmd.angular.z = servo_to_steering(self.servo)
+                self.twist_cmd.angular.z = servo_to_steering(self.servo.data)
 
+            print('Publishing throttle, steering, and servo')
             # publish to the twist and servo topics with calculated values
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else:
+            print("No contour found")
             self.target_found = False
-            self.twist_cmd.linear.x = self.throttle_neutral
 
+            throttle = pid('throttle', self.last_throttle, self.throttle_neutral)
+            steering = pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
+            servo = pid('servo', self.last_servo_pos, self.servo_center)
+            
+            self.twist_cmd.linear.x = throttle
+            self.last_throttle = throttle
+
+            self.twist_cmd.angular.z = steering
+            
+            self.servo.data = float(servo)
+            self.last_servo_pos = self.servo.data
+
+            print("Publishing neutral throttle, steering, and servo")
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 

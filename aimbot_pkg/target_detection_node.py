@@ -92,10 +92,10 @@ class TargetDetection(Node):
                 return float(servo)
 
         
-        def pid(attribute, current, new):
+        def pid(attribute, current, target):
             constants = {'throttle': 5, 'steering': 5, 'servo': 5}
             K = constants[attribute]
-            t = current*(K-1)/K + new/K
+            t = current*(K-1)/K + target/K
             print(f" Caclulated {attribute}: {t}")
             return t
 

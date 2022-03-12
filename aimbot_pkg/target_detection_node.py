@@ -30,7 +30,7 @@ class TargetDetection(Node):
         super().__init__(NODE_NAME)
 
         ### Target Info ###
-
+        self.target_found = False
         self.target_midX = 0
         self.target_midY = 0
 
@@ -192,14 +192,7 @@ class TargetDetection(Node):
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
             print("No contour found")
-
-            throttle = throttle_pid(self.last_throttle, self.throttle_neutral)
-            self.twist_cmd.linear.x = throttle
-            self.last_throttle = throttle
-
-            self.twist_cmd.angular.z = self.steering_center
-            self.servo.data = float(self.servo_center)
-
+            self.target_found = False
             throttle = pid('throttle', self.last_throttle, self.throttle_neutral)
             steering = pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
             servo = pid('servo', self.last_servo_pos, self.servo_center)

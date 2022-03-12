@@ -13,6 +13,7 @@ NODE_NAME = 'target_detection_node'
 
 # topics subscribed to
 CAMERA_IMG_TOPIC_NAME = '/camera/color/image_raw'
+DEPTH_TOPIC_NAME = '/camera/depth/image_rect_raw'
 
 # topics published to
 SERVO_TOPIC_NAME = '/servo'
@@ -72,10 +73,10 @@ class TargetDetection(Node):
         self.servo_publisher = self.create_publisher(Float32, SERVO_TOPIC_NAME, 10)
         self.servo = Float32()
 
-        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.controller, 10)
-
+        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
+        self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
     
-    def controller(self, data):
+    def servo_steering_controller(self, data):
 
         # map servo value to steering value
         def servo_to_steering(servo):
@@ -213,6 +214,16 @@ class TargetDetection(Node):
         # cv2.imshow('hsv', hsv)
         # cv2.imshow('mask', mask)
         # cv2.waitKey(1)
+
+
+    def throttle_controller(self, data):
+        if self.target_found:
+            image = self.bridge.imgmsg_to_cv2(data)
+            pixel = (self.target_midX, self.target_midY)
+            depth = image[pixel[0], pixel[1]]
+            error = depth - self.following_dist
+            Kp = 40
+            self.twist_cmd.linear.x = self.throttle_neutral + Kp * error
 
 
 def main(args=None):

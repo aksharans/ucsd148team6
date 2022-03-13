@@ -31,16 +31,18 @@ class TargetDetection(Node):
         super().__init__(NODE_NAME)
 
         ### Target Info ###
-        self.target_found = False
-        self.target_midX = 0
-        self.target_midY = 0
+        self.target_found = True
+        self.target_midX = 640
+        self.target_midY = 360
 
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = .15
+        self.throttle_neutral = 0.11
         self.last_throttle = self.throttle_neutral
-        self.following_dist = .5
+        self.throttle_min = 0.01
+        self.throttle_max = .21
+        self.following_dist = .3 #meters
 
         # steering values (Twist angular.z)
         # recalibrate these values
@@ -73,8 +75,17 @@ class TargetDetection(Node):
         self.servo_publisher = self.create_publisher(Float32, SERVO_TOPIC_NAME, 10)
         self.servo = Float32()
 
-        self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
+        # self.camera_subscriber = self.create_subscription(Image, CAMERA_IMG_TOPIC_NAME, self.servo_steering_controller, 10)
         self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
+    
+    
+    def pid(self, attribute, current, target):
+        constants = {'throttle': 20, 'steering': 5, 'servo': 5}
+        K = constants[attribute]
+        t = current*(K-1)/K + target/K
+        print(f" Caclulated {attribute}: {t}")
+        return t
+    
     
     def servo_steering_controller(self, data):
 
@@ -90,14 +101,6 @@ class TargetDetection(Node):
                 return self.servo_maxLeft
             else:
                 return float(servo)
-
-        
-        def pid(attribute, current, new):
-            constants = {'throttle': 5, 'steering': 5, 'servo': 5}
-            K = constants[attribute]
-            t = current*(K-1)/K + new/K
-            print(f" Caclulated {attribute}: {t}")
-            return t
 
 
         # get image from data and convert to RGB
@@ -150,7 +153,7 @@ class TargetDetection(Node):
             turn_amount = angle_per_frame*turn_factor
 
             # Set throttle to forward
-            throttle = throttle_pid(self.last_throttle, self.throttle_forward)
+            throttle = self.pid('throttle', self.last_throttle, self.throttle_forward)
             self.twist_cmd.linear.x = throttle
             self.last_throttle = throttle
             
@@ -184,12 +187,12 @@ class TargetDetection(Node):
         else: 
             print("No contour found")
             self.target_found = False
-            throttle = pid('throttle', self.last_throttle, self.throttle_neutral)
-            steering = pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
-            servo = pid('servo', self.last_servo_pos, self.servo_center)
+            # throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
+            steering = self.pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
+            servo = self.pid('servo', self.last_servo_pos, self.servo_center)
             
-            self.twist_cmd.linear.x = throttle
-            self.last_throttle = throttle
+            # self.twist_cmd.linear.x = throttle
+            # self.last_throttle = throttle
 
             self.twist_cmd.angular.z = steering
             
@@ -205,16 +208,37 @@ class TargetDetection(Node):
         # cv2.imshow('mask', mask)
         # cv2.waitKey(1)
 
+    def clamp(self, value, min, max):
+        if value < min:
+            return min
+        elif value > max:
+            return max
+        else:
+            return value
+
 
     def throttle_controller(self, data):
+        print("getting data")
         if self.target_found:
             image = self.bridge.imgmsg_to_cv2(data)
-            pixel = (self.target_midX, self.target_midY)
+            height, width = image.shape[:2]
+            pixel = (int(height/2), int(width/2))
             depth = image[pixel[0], pixel[1]]
-            error = depth - self.following_dist
-            Kp = 40
-            self.twist_cmd.linear.x = self.throttle_neutral + Kp * error
-
+            print(f'wanted depth: {self.following_dist}')
+            print(f'depth at center pixel: {depth} mm')
+            m2mm_factor = 1000
+            error = depth - self.following_dist * m2mm_factor
+            Kp = .0005
+            control = self.clamp(self.throttle_neutral + Kp * error, self.throttle_min, self.throttle_max)
+            throttle = self.pid('throttle', self.last_throttle, control)
+            self.twist_cmd.linear.x = throttle
+            self.last_throttle = throttle
+            self.twist_publisher.publish(self.twist_cmd)
+        else:
+            print("setting neutral throttle cuz no target found")
+            throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
+            self.last_throttle = throttle
+            self.twist_publisher.publish(self.twist_cmd)
 
 def main(args=None):
 
@@ -229,7 +253,7 @@ def main(args=None):
     except KeyboardInterrupt:
         print(f"Shutting down {NODE_NAME}")
 
-        target_detection.twist_cmd.linear.x = 0.225
+        target_detection.twist_cmd.linear.x = target_detection.throttle_neutral
         target_detection.twist_publisher.publish(target_detection.twist_cmd)
 
         time.sleep(1)

@@ -40,25 +40,25 @@ class TargetDetection(Node):
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = 0.11
+        self.throttle_neutral = 0.0
         self.last_throttle = self.throttle_neutral
         self.throttle_min = self.throttle_neutral
-        self.throttle_max = .16
-        self.following_dist = .3 #meters
+        self.throttle_max = .14
+        self.following_dist = 1  #meters
 
         # steering values (Twist angular.z)
         # recalibrate these values
-        self.steering_center = 0.15
+        self.steering_center = 0.2
         self.steering_maxleft = -0.3
-        self.steering_maxright = 0.6
+        self.steering_maxright = 0.7
 
         # servo values
         # max left and max right for SERVO left: 180, right: 90, middle: 135
         # (bus:  1, port 8, max: 180, min: 80)
-        self.servo_maxLeft = 180.0
+        self.servo_maxLeft = 170.0
         self.servo_maxRight = 80.0
-        self.servo_center = 130.0
-        self.last_servo_pos = 130.0
+        self.servo_center = 125.0
+        self.last_servo_pos = 125.0
 
 
         ### Camera threshold ###
@@ -82,7 +82,7 @@ class TargetDetection(Node):
     
     
     def pid(self, attribute, current, target):
-        constants = {'throttle': 20, 'steering': 25, 'servo': 25}
+        constants = {'throttle': 30, 'steering': 25, 'servo': 25}
         K = constants[attribute]
         t = current*(K-1)/K + target/K
         print(f" Caclulated {attribute}: {t}")
@@ -93,7 +93,7 @@ class TargetDetection(Node):
 
         # map servo value to steering value
         def servo_to_steering(servo):
-            return (270-servo)/100 - 1.2
+            return ((250-servo)-125)/90 + .2
 
         # check whether servo is out of the max bounds, so the steering doesn't exceed it's max
         def check_servo(servo):
@@ -131,7 +131,7 @@ class TargetDetection(Node):
         print(f"Area: {area}")
 
         # if area greater than a certain threshold
-        if area > 2000:
+        if area > 100:
             print("Contour found")
             self.target_found = True
             # draw a rectangle around c and get x position & width
@@ -146,8 +146,8 @@ class TargetDetection(Node):
 
             # evaluate servo adjustment with P controller
             # turn_amount decreases as target center
-            turn_factor = abs(distance)/self.image_midX
-            angle_per_frame = 10                                 # is closer to image center
+            turn_factor = (abs(distance)/self.image_midX)**2
+            angle_per_frame = 20                                # is closer to image center
             turn_amount = angle_per_frame*turn_factor
 
 
@@ -178,7 +178,7 @@ class TargetDetection(Node):
 
         # if no target (rectangle), then stop -- no throttle, no steering
         else: 
-            print("No contour found")
+            print("NO CONTOUR FOUND!!!!")
             self.target_found = False
             # throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
             steering = self.pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
@@ -211,29 +211,32 @@ class TargetDetection(Node):
 
 
     def throttle_controller(self, data):
-        print("getting data")
         if self.target_found:
             image = self.bridge.imgmsg_to_cv2(data)
             pixel = (int(self.target_midY), int(self.target_midX))
             depth = image[pixel[0], pixel[1]]
-            print('\n' + f'wanted depth: {self.following_dist}' + '\n')
+            print('\n' + f'wanted depth: {self.following_dist} m' + '\n')
             print(f'depth at target location {pixel} is {depth/1000} m')
             m2mm_factor = 1000
             error = depth - self.following_dist * m2mm_factor
-            Kp = .0005
+            Kp = .001
             if error > 0:
                 print('publishing forward throttle')
                 control = min(Kp * error + self.throttle_neutral, self.throttle_max)
+                throttle = self.pid('throttle', self.last_throttle, control)
             else:
-                print('publishing neutral throttle')
-                control = self.throttle_neutral
-            throttle = self.pid('throttle', self.last_throttle, control)
+                if depth == 0:
+                    throttle = self.last_throttle
+                else:
+                    print('TOO CLOSE!!! ---publishing neutral throttle')
+                    throttle = self.throttle_neutral
             self.twist_cmd.linear.x = throttle
             self.last_throttle = throttle
         else:
             print("setting neutral throttle cuz no target found")
             throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
             self.last_throttle = throttle
+
 
 def main(args=None):
 

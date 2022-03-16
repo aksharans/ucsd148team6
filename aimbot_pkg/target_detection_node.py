@@ -82,7 +82,7 @@ class TargetDetection(Node):
     
     
     def pid(self, attribute, current, target):
-        constants = {'throttle': 30, 'steering': 25, 'servo': 25}
+        constants = {'throttle': 5, 'steering': 25, 'servo': 25}
         K = constants[attribute]
         t = current*(K-1)/K + target/K
         print(f" Caclulated {attribute}: {t}")
@@ -115,11 +115,14 @@ class TargetDetection(Node):
         # (H, S, V)
         # blue object
         # calibrate these values with poster board
-        lower = np.array([80, 155, 20])
-        higher = np.array([130, 255, 255])
+        blue_lower = np.array([80, 155, 20])
+        blue_higher = np.array([130, 255, 255])
+        purpl_lower = np.array([120, 90, 20])
+        purpl_higher = np.array([160, 255, 255])
 
         # mask and find contours
-        mask = cv2.inRange(hsv, lower, higher)
+        # mask = cv2.inRange(hsv, blue_lower, blue_higher)
+        mask = cv2.inRange(hsv, purpl_lower, purpl_higher)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # get max contour if there is one and get it's area

@@ -22,7 +22,8 @@ TWIST_TOPIC_NAME = '/cmd_vel'
 
 # change included sensors in car_config.yaml
 # change adafruit_servo_calibration.yaml for max and min servo values 
-# change steering to channel 4 and throttle to channel 7 in adafruit_twist.py
+# change steering to channel X and throttle to channel Y in adafruit_twist.py,
+# where X and Y are the channels they're plugged into in the PWM
 
 
 class TargetDetection(Node):
@@ -53,18 +54,10 @@ class TargetDetection(Node):
         self.steering_maxright = 0.7
 
         # servo values
-        # max left and max right for SERVO left: 180, right: 90, middle: 135
-        # (bus:  1, port 8, max: 180, min: 80)
         self.servo_maxLeft = 170.0
         self.servo_maxRight = 80.0
         self.servo_center = 125.0
-        self.last_servo_pos = 125.0
-
-
-        ### Camera threshold ###
-        # threshold distance from the image center for where we don't want the
-        # robot to adjust its steering/servo, rather, it should just go straight
-        self.camera_threshold = 90.0
+        self.last_servo_pos = self.servo_center
 
         # bridge for camera
         self.bridge = CvBridge()
@@ -103,7 +96,7 @@ class TargetDetection(Node):
         else:
             return float(servo)
     
-    
+
     '''Controller Functions'''
     
     def servo_steering_controller(self, data):

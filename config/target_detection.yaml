@@ -1,0 +1,36 @@
+target_detection_node:
+  ros__parameters:
+
+    # HSV: [Hue, Saturation, Value]
+    # Blue low: [80, 155, 20] Blue high: [130, 255, 255]
+    # Purple low: [120, 90, 20], Purple high: [160, 255, 255]
+    Hue_low: 120
+    Hue_high: 90
+    Sat_low: 20
+    Sat_high: 160
+    Val_low: 255 
+    Val_high: 255
+
+    # Image and target positions
+    image_midX: 320
+    image_midY: 240
+    target_midX: 320
+    target_midY: 240
+    
+    # Throttle (Twist linear.x)
+    throttle_neutral: 0.0
+    throttle_min: 0.0
+    throttle_max: 0.14
+    following_dist: 1 # meters
+
+    # Steering (Twist angular.z)
+    steering_center: 0.2
+    steering_maxleft: -0.3
+    steering_maxright: 0.7
+
+    # Servo (configure bus, port, max, min in servo calibration)
+    servo_maxLeft: 170.0
+    servo_maxRight: 80.0
+    servo_center: 125.0
+    
+

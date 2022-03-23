@@ -1,3 +1,8 @@
 # UCSD 148 ECE/MAE 148 Team 6
 
-## Project code is in the [`container` branch](https://github.com/aksharans/ucsd148team6/tree/container).
+# Branch for integration into https://gitlab.com/ucsd_robocar2/ucsd_robocar_hub2
+
+By:
+Aksharan Saravanan
+Hieu Luu
+Katada Siraj

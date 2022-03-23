@@ -228,8 +228,8 @@ class TargetDetection(Node):
                 control = min(Kp * error + self.throttle_neutral, self.throttle_max)
                 throttle = self.pid('throttle', self.last_throttle, control)
             else:
-                if depth == 0:
-                    throttle = self.last_throttle
+                if depth == 0:                    # the RGBD camera randomly gives a depth of 0 m. 
+                    throttle = self.last_throttle # This if statement is to prevent the car from randomly stopping and jumping to neutral throttle.
                 else:
                     print('TOO CLOSE!!! ---publishing neutral throttle')
                     throttle = self.throttle_neutral

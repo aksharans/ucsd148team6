@@ -81,29 +81,32 @@ class TargetDetection(Node):
         self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
     
     
+    ''' Utility Functions '''
+
     def pid(self, attribute, current, target):
         constants = {'throttle': 5, 'steering': 25, 'servo': 25}
         K = constants[attribute]
         t = current*(K-1)/K + target/K
         print(f" Caclulated {attribute}: {t}")
         return t
+
+    # map servo value to steering value
+    def servo_to_steering(self, servo):
+        return ((250-servo)-125)/90 + .2
+
+    # check whether servo is out of the max bounds, so the steering doesn't exceed it's max
+    def check_servo(self, servo):
+        if servo < self.servo_maxRight:
+            return self.servo_maxRight
+        elif servo > self.servo_maxLeft:
+            return self.servo_maxLeft
+        else:
+            return float(servo)
     
+    
+    '''Controller Functions'''
     
     def servo_steering_controller(self, data):
-
-        # map servo value to steering value
-        def servo_to_steering(servo):
-            return ((250-servo)-125)/90 + .2
-
-        # check whether servo is out of the max bounds, so the steering doesn't exceed it's max
-        def check_servo(servo):
-            if servo < self.servo_maxRight:
-                return self.servo_maxRight
-            elif servo > self.servo_maxLeft:
-                return self.servo_maxLeft
-            else:
-                return float(servo)
-
 
         # get image from data and convert to RGB
         frame = self.bridge.imgmsg_to_cv2(data)
@@ -158,21 +161,21 @@ class TargetDetection(Node):
             if distance > 0: 
 
                 # servo
-                self.servo.data = check_servo(self.last_servo_pos - turn_amount)
+                self.servo.data = self.check_servo(self.last_servo_pos - turn_amount)
                 self.last_servo_pos = self.servo.data
 
                 # steering
-                self.twist_cmd.angular.z = servo_to_steering(self.servo.data)
+                self.twist_cmd.angular.z = self.servo_to_steering(self.servo.data)
 
             # target x less than image x, we need to turn left
             elif distance < 0:
 
                 # servo
-                self.servo.data = check_servo(self.last_servo_pos + turn_amount)
+                self.servo.data = self.check_servo(self.last_servo_pos + turn_amount)
                 self.last_servo_pos = self.servo.data
 
                 # steering
-                self.twist_cmd.angular.z = servo_to_steering(self.servo.data)
+                self.twist_cmd.angular.z = self.servo_to_steering(self.servo.data)
 
             print('Publishing throttle, steering, and servo')
             # publish to the twist and servo topics with calculated values
@@ -184,7 +187,7 @@ class TargetDetection(Node):
             print("NO CONTOUR FOUND!!!!")
             self.target_found = False
             # throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
-            steering = self.pid('steering', servo_to_steering(self.last_servo_pos), self.steering_center)
+            steering = self.pid('steering', self.servo_to_steering(self.last_servo_pos), self.steering_center)
             servo = self.pid('servo', self.last_servo_pos, self.servo_center)
             
             # self.twist_cmd.linear.x = throttle
@@ -203,14 +206,6 @@ class TargetDetection(Node):
         # cv2.imshow('hsv', hsv)
         # cv2.imshow('mask', mask)
         # cv2.waitKey(1)
-
-    def clamp(self, value, min, max):
-        if value < min:
-            return min
-        elif value > max:
-            return max
-        else:
-            return value
 
 
     def throttle_controller(self, data):

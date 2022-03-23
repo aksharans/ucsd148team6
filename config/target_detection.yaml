@@ -33,4 +33,12 @@ target_detection_node:
     servo_maxRight: 80.0
     servo_center: 125.0
     
+    # image area
+    area_min_threshold: 100.0
+
+    # Kp constants
+    Kp_throttle: 5
+    Kp_steering: 25
+    Kp_servo: 25
+    Kp_depth_throttle: 0.001
 

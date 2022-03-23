@@ -43,7 +43,7 @@ class TargetDetection(Node):
         # throttle values (Twist linear.x)
         self.throttle_neutral = 0.0
         self.last_throttle = self.throttle_neutral
-        self.throttle_min = self.throttle_neutral
+        self.throttle_min = 0.0
         self.throttle_max = .14
         self.following_dist = 1  #meters
 
@@ -129,8 +129,10 @@ class TargetDetection(Node):
             area = cv2.contourArea(c)
         print(f"Area: {area}")
 
+        area_min_threshold = 100.0
+
         # if area greater than a certain threshold
-        if area > 100:
+        if area > area_min_threshold:
             print("Contour found")
             self.target_found = True
             # draw a rectangle around c and get x position & width
@@ -179,12 +181,8 @@ class TargetDetection(Node):
         else: 
             print("NO CONTOUR FOUND!!!!")
             self.target_found = False
-            # throttle = self.pid('throttle', self.last_throttle, self.throttle_neutral)
             steering = self.pid('steering', self.servo_to_steering(self.last_servo_pos), self.steering_center)
             servo = self.pid('servo', self.last_servo_pos, self.servo_center)
-            
-            # self.twist_cmd.linear.x = throttle
-            # self.last_throttle = throttle
 
             self.twist_cmd.angular.z = steering
             
@@ -195,10 +193,6 @@ class TargetDetection(Node):
             self.twist_publisher.publish(self.twist_cmd)
             self.servo_publisher.publish(self.servo)
 
-        # cv2.imshow('frame', frame)
-        # cv2.imshow('hsv', hsv)
-        # cv2.imshow('mask', mask)
-        # cv2.waitKey(1)
 
 
     def throttle_controller(self, data):

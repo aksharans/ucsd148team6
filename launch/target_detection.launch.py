@@ -12,6 +12,7 @@ def generate_launch_description():
 
     aimbot_pkg = 'aimbot_pkg'
     td_node_name = 'target_detection_node'
+    calibration_file = 'target_detection.yaml'
 
     actuator_package = 'ucsd_robocar_actuator2_pkg'
     adafruit_servo_launch = 'adafruit_servo.launch.py'
@@ -49,10 +50,18 @@ def generate_launch_description():
         )
     )
 
+
+    config = os.path.join(
+        get_package_share_directory(aimbot_pkg),
+        'config',
+        calibration_file)
+
+
     target_detection_node = Node(
         package=aimbot_pkg,
         executable=td_node_name,
         output='screen',
+        parameters=[config]
     )
 
 

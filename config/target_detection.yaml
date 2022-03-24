@@ -33,7 +33,7 @@ target_detection_node:
     servo_maxRight: 80.0
     servo_center: 125.0
     
-    # image area
+    # minimum area of contour to detect 
     area_min_threshold: 100.0
 
     # Kp constants

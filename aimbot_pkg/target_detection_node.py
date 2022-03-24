@@ -31,33 +31,82 @@ class TargetDetection(Node):
     def __init__(self):
         super().__init__(NODE_NAME)
 
+        ### Declaring Parameters ###
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('Hue_low', 1),
+                ('Hue_high', 1),
+                ('Sat_low', 1),
+                ('Sat_high', 1),
+                ('Val_low', 1),
+                ('Val_high', 1),
+                ('image_midX', 1),
+                ('image_midY', 1),
+                ('target_midX', 1),
+                ('target_midY', 1),
+                ('throttle_neutral', 1),
+                ('throttle_min', 1),
+                ('throttle_max', 1),
+                ('following_dist', 1),
+                ('steering_center', 1),
+                ('steering_maxleft', 1),
+                ('steering_maxright', 1),
+                ('servo_maxLeft', 1),
+                ('servo_maxRight', 1),
+                ('servo_center', 1),
+                ('area_min_threshold', 1),
+                ('Kp_throttle', 1),
+                ('Kp_steering', 1),
+                ('Kp_servo', 1),
+                ('Kp_depth_throttle', 1)
+            ]
+        )
+
+
+        ### HSV values ###
+        self.Hue_low = self.get_parameter('Hue_low').value
+        self.Hue_high = self.get_parameter('Hue_high').value
+        self.Sat_low = self.get_parameter('Sat_low').value
+        self.Sat_high = self.get_parameter('Sat_high').value
+        self.Val_low = self.get_parameter('Val_low').value
+        self.Val_high = self.get_parameter('Val_high').value
+
         ### Target and Image Info ###
         self.target_found = False
-        self.image_midX = 320 # this resolution is for both rgb data and depth data
-        self.image_midY = 240
-        self.target_midX = 320 # width
-        self.target_midY = 240 # height
+        self.image_midX = self.get_parameter('image_midX').value
+        self.image_midY = self.get_parameter('image_midY').value
+        self.target_midX = self.get_parameter('target_midX').value
+        self.target_midY = self.get_parameter('target_midY').value
         
         ### Actuator constants ###
 
         # throttle values (Twist linear.x)
-        self.throttle_neutral = 0.0
+        self.throttle_neutral = self.get_parameter('throttle_neutral').value
         self.last_throttle = self.throttle_neutral
-        self.throttle_min = 0.0
-        self.throttle_max = .14
-        self.following_dist = 1  #meters
+        self.throttle_min = self.get_parameter('throttle_min').value
+        self.throttle_max = self.get_parameter('throttle_max').value
+        self.following_dist = self.get_parameter('following_dist').value
 
         # steering values (Twist angular.z)
-        # recalibrate these values
-        self.steering_center = 0.2
-        self.steering_maxleft = -0.3
-        self.steering_maxright = 0.7
+        self.steering_center = self.get_parameter('steering_center').value
+        self.steering_maxleft = self.get_parameter('steering_maxleft').value
+        self.steering_maxright = self.get_parameter('steering_maxright').value
 
         # servo values
-        self.servo_maxLeft = 170.0
-        self.servo_maxRight = 80.0
-        self.servo_center = 125.0
+        self.servo_maxLeft = self.get_parameter('servo_maxLeft').value
+        self.servo_maxRight = self.get_parameter('servo_maxRight').value
+        self.servo_center = self.get_parameter('servo_center').value
         self.last_servo_pos = self.servo_center
+
+        ### Contour Area ###
+        self.area_min_threshold = self.get_parameter('area_min_threshold').value
+
+        ### Kp constants ###
+        self.Kp_throttle = self.get_parameter('Kp_throttle').value
+        self.Kp_steering = self.get_parameter('Kp_steering').value
+        self.Kp_servo = self.get_parameter('Kp_serv').value
+        self.Kp_depth_throttle = self.get_parameter('Kp_depth_throttle').value
 
         # bridge for camera
         self.bridge = CvBridge()
@@ -74,7 +123,7 @@ class TargetDetection(Node):
         self.depth_subscriber = self.create_subscription(Image, DEPTH_TOPIC_NAME, self.throttle_controller, 10)
     
     
-    ''' Utility Functions '''
+    # Utility Functions
 
     def pid(self, attribute, current, target):
         constants = {'throttle': 5, 'steering': 25, 'servo': 25}
@@ -97,7 +146,7 @@ class TargetDetection(Node):
             return float(servo)
     
 
-    '''Controller Functions'''
+    # Controller Functions
     
     def servo_steering_controller(self, data):
 
@@ -210,8 +259,8 @@ class TargetDetection(Node):
                 control = min(Kp * error + self.throttle_neutral, self.throttle_max)
                 throttle = self.pid('throttle', self.last_throttle, control)
             else:
-                if depth == 0:
-                    throttle = self.last_throttle
+                if depth == 0:                    # the RGBD camera randomly gives a depth of 0 m. 
+                    throttle = self.last_throttle # This if statement is to prevent the car from randomly stopping and jumping to neutral throttle.
                 else:
                     print('TOO CLOSE!!! ---publishing neutral throttle')
                     throttle = self.throttle_neutral

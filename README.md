@@ -9,6 +9,39 @@ By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
 ## Calibration (config/target_detection.yaml)
 
+```
+Hue_low: lower hue 
+Hue_high: higher hue 
+Sat_low: lower saturation 
+Sat_high: higher saturation
+Val_low: lower value 
+Val_high: higher value
+
+image_midX: incoming sensor image center x coordinate
+image_midY: incoming sensor image center y coordinate
+
+throttle_neutral: neutral throttle
+throttle_min: minimum throttle
+throttle_max: maximum throttle
+following_dist: following distance from target
+
+# Steering (Twist angular.z)
+steering_center: steering straight center
+steering_maxleft: steering max left
+steering_maxright: steering max right
+
+# Servo (configure bus, port, max, min in servo calibration)
+servo_maxLeft: servo max left
+servo_maxRight: steering max right
+servo_center: servo straight center
+
+area_min_threshold: minimum area of a contour to detect (filter out noise)
+
+Kp_throttle: Kp for throttle
+Kp_steering: Kp for steering
+Kp_servo: Kp for the servo
+Kp_depth_throttle: Kp for depth target throttle
+```
 
 ## Workflow
 
@@ -29,7 +62,7 @@ n/a
 
 ## Topics 
 
-| Topic | Node | Publishing/Subscribing | Message Type | Info |
+| Topic | Node | Publishing To/Subscribing To | Message Type | Info |
 | --- | ---- | ---- | ---- | ---- |
 | /servo | adafruit_servo | publishing | std_msgs.msg.Float32 | .data for value |
 | /cmd_vel | adafruit_twist | publishing | geometry_msgs.msg.Twist | linear.x for throttle, angular.z for steering |

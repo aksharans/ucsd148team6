@@ -126,7 +126,7 @@ class TargetDetection(Node):
     # Utility Functions
 
     def pid(self, attribute, current, target):
-        constants = {'throttle': 5, 'steering': 25, 'servo': 25}
+        constants = {'throttle': self.Kp_throttle, 'steering': self.Kp_steering, 'servo': self.Kp_servo}
         K = constants[attribute]
         t = current*(K-1)/K + target/K
         print(f" Caclulated {attribute}: {t}")
@@ -160,14 +160,12 @@ class TargetDetection(Node):
         # (H, S, V)
         # blue object
         # calibrate these values with poster board
-        blue_lower = np.array([80, 155, 20])
-        blue_higher = np.array([130, 255, 255])
-        purpl_lower = np.array([120, 90, 20])
-        purpl_higher = np.array([160, 255, 255])
+        lower = np.array([self.Hue_low, self.Sat_low, self.Val_low])
+        higher = np.array([self.Hue_high, self.Sat_high, self.Val_high])
 
         # mask and find contours
         # mask = cv2.inRange(hsv, blue_lower, blue_higher)
-        mask = cv2.inRange(hsv, purpl_lower, purpl_higher)
+        mask = cv2.inRange(hsv, lower, higher)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # get max contour if there is one and get it's area
@@ -178,10 +176,8 @@ class TargetDetection(Node):
             area = cv2.contourArea(c)
         print(f"Area: {area}")
 
-        area_min_threshold = 100.0
-
         # if area greater than a certain threshold
-        if area > area_min_threshold:
+        if area > self.area_min_threshold:
             print("Contour found")
             self.target_found = True
             # draw a rectangle around c and get x position & width
@@ -253,7 +249,7 @@ class TargetDetection(Node):
             print(f'depth at target location {pixel} is {depth/1000} m')
             m2mm_factor = 1000
             error = depth - self.following_dist * m2mm_factor
-            Kp = .001
+            Kp = self.Kp_depth_throttle
             if error > 0:
                 print('publishing forward throttle')
                 control = min(Kp * error + self.throttle_neutral, self.throttle_max)

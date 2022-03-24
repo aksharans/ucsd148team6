@@ -43,8 +43,6 @@ class TargetDetection(Node):
                 ('Val_high', 255),
                 ('image_midX', 320),
                 ('image_midY', 240),
-                ('target_midX', 320),
-                ('target_midY', 240),
                 ('throttle_neutral', 0.0),
                 ('throttle_min', 0.0),
                 ('throttle_max', 0.14),
@@ -76,8 +74,8 @@ class TargetDetection(Node):
         self.target_found = False
         self.image_midX = self.get_parameter('image_midX').value
         self.image_midY = self.get_parameter('image_midY').value
-        self.target_midX = self.get_parameter('target_midX').value
-        self.target_midY = self.get_parameter('target_midY').value
+        self.target_midX = self.image_midX # width
+        self.target_midY = self.image_midY # height
         
         ### Actuator constants ###
 

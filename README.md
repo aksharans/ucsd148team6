@@ -5,7 +5,7 @@ By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
 ## About
 
-
+Package developed for [our UCSD ECE/MAE 148 final project](https://guitar.ucsd.edu/maeece148/index.php/2022WinterTeam6). This ROS package allows an autonomous robot to detect a target of a specific color, and then continually follow and track that target.
 
 ## Calibration (config/target_detection.yaml)
 
@@ -25,12 +25,10 @@ throttle_min: minimum throttle
 throttle_max: maximum throttle
 following_dist: following distance from target
 
-# Steering (Twist angular.z)
 steering_center: steering straight center
 steering_maxleft: steering max left
 steering_maxright: steering max right
 
-# Servo (configure bus, port, max, min in servo calibration)
 servo_maxLeft: servo max left
 servo_maxRight: steering max right
 servo_center: servo straight center
@@ -58,6 +56,9 @@ n/a
 
 #### target_detection_node
 
+Associated File: aimbot_pkg/target_detection_node.py
+
+Target Detection node interacts with the topics below and has 2 controllers: the steering controller and the throttle controller. The node recieves image data from a camera (in our case, the Intel RGBD camera, but can use with any webcam by changing some of the code). It then detects whether the image is within a certain HSV range and above a threshold area. If so, it will adjust its steering and servo (with the camera and a small laser mounted) to point at the center of the target. It also incorporates depth data by dynamically adjusting it's throttle depending on the target's distance (if the target is farther away, accelarate to max throttle and if the target gets closer, slow down until a full stop is made at around 1 meter).
 
 
 ## Topics 

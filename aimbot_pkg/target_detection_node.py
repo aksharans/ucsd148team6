@@ -103,7 +103,7 @@ class TargetDetection(Node):
         ### Kp constants ###
         self.Kp_throttle = self.get_parameter('Kp_throttle').value
         self.Kp_steering = self.get_parameter('Kp_steering').value
-        self.Kp_servo = self.get_parameter('Kp_serv').value
+        self.Kp_servo = self.get_parameter('Kp_servo').value
         self.Kp_depth_throttle = self.get_parameter('Kp_depth_throttle').value
 
         # bridge for camera

@@ -82,8 +82,14 @@ This file launches the target_detection node in this package. It also launches n
 `ros2 launch aimbot_pkg target_detection.launch.py`
 
 
+## Demo Video
 
+https://www.youtube.com/watch?v=tL3elf0cDe0
 
 ## Troubleshooting
 
-TODO
+- If the steering & throttle don't seem to be running, try re-calibrating the values by launching the twist node and publishing using the command line
+- If the servo is not moving, make sure that the correct channel is specified and the values are calibrated by launching the servo node
+- If the Intel camera is not running, try stopping and exiting the container, then restarting, and check if the wire is fully plugged in
+- If the car is too slow and not as responsive, try changing the Kp values
+- Start by testing the launched target detection node on the stand first to make sure the servo/steering is moving to track a target and also the throttle responds to the target depth 

@@ -3,9 +3,12 @@
 #### Branch for integration into https://gitlab.com/ucsd_robocar2/ucsd_robocar_hub2
 By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
+## Presentation
+https://docs.google.com/presentation/d/1ISCmDjf8d7DylGqL-Gtz6IDGRL4E7Qd2NHrWhWZvc_s/edit?usp=sharing
+
 ## About
 
-Package developed for [our UCSD ECE/MAE 148 final project](https://guitar.ucsd.edu/maeece148/index.php/2022WinterTeam6). This ROS package allows an autonomous robot to detect a target of a specific color, and then continually follow and track that target.
+Package developed for our UCSD ECE/MAE 148 final project. This ROS package allows an autonomous robot to detect a target of a specific color, and then continually follow and track that target.
 
 ## Calibration (config/target_detection.yaml)
 

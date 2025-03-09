@@ -3,7 +3,7 @@
 #### Branch for integration into https://gitlab.com/ucsd_robocar2/ucsd_robocar_hub2
 By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
-## Presentation
+## Presentation (also see Report.pdf)
 https://docs.google.com/presentation/d/1ISCmDjf8d7DylGqL-Gtz6IDGRL4E7Qd2NHrWhWZvc_s/edit?usp=sharing
 
 ## About

@@ -1,11 +1,9 @@
-# UCSD ECE/MAE 148: Team 6 Aimbot Package
+# UCSD ECE/MAE 148: Autonomous Target Detection & Tracking Aimbot Package (Team 6)
+By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
 ## Presentation: https://docs.google.com/presentation/d/1ISCmDjf8d7DylGqL-Gtz6IDGRL4E7Qd2NHrWhWZvc_s/edit?usp=sharing
 ## Report: https://github.com/aksharans/ucsd148team6/blob/aimbot_pkg/Report.pdf
 
-### Target Detection & Tracking
-#### Branch for integration into https://gitlab.com/ucsd_robocar2/ucsd_robocar_hub2
-By: Aksharan Saravanan, Hieu Luu, Katada Siraj
 
 
 ## About
